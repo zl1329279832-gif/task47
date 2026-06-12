@@ -106,19 +106,25 @@ public class XuanpaiServiceImpl extends ServiceImpl<XuanpaiDao, XuanpaiEntity> i
 
     @Override
     public int releaseExpiredReservations() {
+        // 先查询过期记录（含 yuyue_user_id），再批量释放；
+        // 原代码先 UPDATE 再 SELECT，UPDATE 已把状态改为 1 导致 SELECT 永远返回空，
+        // yuyue_jilu type=2 日志从未落库。
+        List<XuanpaiEntity> expired = baseMapper.selectExpiredReservations();
+
+        if (expired == null || expired.isEmpty()) {
+            return 0;
+        }
+
         int affected = baseMapper.batchReleaseExpired();
 
         // 记录过期释放日志
-        if (affected > 0) {
-            List<XuanpaiEntity> expired = baseMapper.selectExpiredReservations();
-            for (XuanpaiEntity entity : expired) {
-                YuyueJiluEntity jilu = new YuyueJiluEntity();
-                jilu.setYonghuId(entity.getYuyueUserId());
-                jilu.setXuanpaiId(entity.getId());
-                jilu.setYuyueJiluTypes(2);
-                jilu.setInsertTime(new Date());
-                yuyueJiluDao.insert(jilu);
-            }
+        for (XuanpaiEntity entity : expired) {
+            YuyueJiluEntity jilu = new YuyueJiluEntity();
+            jilu.setYonghuId(entity.getYuyueUserId());
+            jilu.setXuanpaiId(entity.getId());
+            jilu.setYuyueJiluTypes(2);
+            jilu.setInsertTime(new Date());
+            yuyueJiluDao.insert(jilu);
         }
 
         return affected;

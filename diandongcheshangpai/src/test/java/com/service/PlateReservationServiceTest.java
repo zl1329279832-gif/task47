@@ -231,13 +231,10 @@ public class PlateReservationServiceTest {
 
     @Test
     public void testReleaseExpiredReservations_NoneExpired() {
-        when(xuanpaiDao.batchReleaseExpired()).thenReturn(0);
-
         int result = xuanpaiService.releaseExpiredReservations();
 
         assertEquals(0, result);
         verify(yuyueJiluDao, never()).insert(any(YuyueJiluEntity.class));
-        verify(xuanpaiDao, never()).selectExpiredReservations();
     }
 
     // ---- getPlateWithLazyExpire tests ----
