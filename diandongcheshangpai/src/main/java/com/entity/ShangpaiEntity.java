@@ -72,6 +72,14 @@ public class ShangpaiEntity<T> implements Serializable {
 
 
     /**
+     * 保险
+     */
+    @TableField(value = "baoxian_id")
+
+    private Integer baoxianId;
+
+
+    /**
      * 审核状态
      */
     @TableField(value = "shangpai_types")
@@ -145,6 +153,20 @@ public class ShangpaiEntity<T> implements Serializable {
         this.xuanpaiId = xuanpaiId;
     }
     /**
+	 * 设置：保险
+	 */
+    public Integer getBaoxianId() {
+        return baoxianId;
+    }
+
+    /**
+	 * 获取：保险
+	 */
+    public void setBaoxianId(Integer baoxianId) {
+        this.baoxianId = baoxianId;
+    }
+
+    /**
 	 * 设置：审核状态
 	 */
     public Integer getShangpaiTypes() {
@@ -196,6 +218,7 @@ public class ShangpaiEntity<T> implements Serializable {
             "id=" + id +
             ", yonghuId=" + yonghuId +
             ", xuanpaiId=" + xuanpaiId +
+            ", baoxianId=" + baoxianId +
             ", shangpaiTypes=" + shangpaiTypes +
             ", insertTime=" + insertTime +
             ", createTime=" + createTime +

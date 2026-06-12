@@ -62,6 +62,24 @@ public class ShangpaiView extends ShangpaiEntity implements Serializable {
 			* 用户姓名
 			*/
 			private String yonghuName;
+
+		//级联表 baoxian
+			/**
+			* 保险标题
+			*/
+			private String baoxianName;
+			/**
+			* 保险类型
+			*/
+			private Integer baoxianTypes;
+				/**
+				* 保险类型的值
+				*/
+				private String baoxianValue;
+			/**
+			* 保险价格
+			*/
+			private Double baoxianMoney;
 			/**
 			* 性别
 			*/
@@ -316,7 +334,54 @@ public class ShangpaiView extends ShangpaiEntity implements Serializable {
 						this.yonghuPhoto = yonghuPhoto;
 					}
 
-
-
+				//级联表的get和set baoxian
+					/**
+					* 获取： 保险标题
+					*/
+					public String getBaoxianName() {
+						return baoxianName;
+					}
+					/**
+					* 设置： 保险标题
+					*/
+					public void setBaoxianName(String baoxianName) {
+						this.baoxianName = baoxianName;
+					}
+					/**
+					* 获取： 保险类型
+					*/
+					public Integer getBaoxianTypes() {
+						return baoxianTypes;
+					}
+					/**
+					* 设置： 保险类型
+					*/
+					public void setBaoxianTypes(Integer baoxianTypes) {
+						this.baoxianTypes = baoxianTypes;
+					}
+					/**
+					* 获取： 保险类型的值
+					*/
+					public String getBaoxianValue() {
+						return baoxianValue;
+					}
+					/**
+					* 设置： 保险类型的值
+					*/
+					public void setBaoxianValue(String baoxianValue) {
+						this.baoxianValue = baoxianValue;
+					}
+					/**
+					* 获取： 保险价格
+					*/
+					public Double getBaoxianMoney() {
+						return baoxianMoney;
+					}
+					/**
+					* 设置： 保险价格
+					*/
+					public void setBaoxianMoney(Double baoxianMoney) {
+						this.baoxianMoney = baoxianMoney;
+					}
 
 }

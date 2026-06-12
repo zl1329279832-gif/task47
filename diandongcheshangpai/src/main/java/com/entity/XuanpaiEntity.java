@@ -90,6 +90,24 @@ public class XuanpaiEntity<T> implements Serializable {
 
 
     /**
+     * 预占用户
+     */
+    @TableField(value = "yonghu_id")
+
+    private Integer yonghuId;
+
+
+    /**
+     * 预占时间
+     */
+    @JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
+	@DateTimeFormat
+    @TableField(value = "yuezhan_time")
+
+    private Date yuezhanTime;
+
+
+    /**
      * 创建时间
      */
     @JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
@@ -175,6 +193,34 @@ public class XuanpaiEntity<T> implements Serializable {
         this.insertTime = insertTime;
     }
     /**
+	 * 设置：预占用户
+	 */
+    public Integer getYonghuId() {
+        return yonghuId;
+    }
+
+    /**
+	 * 获取：预占用户
+	 */
+    public void setYonghuId(Integer yonghuId) {
+        this.yonghuId = yonghuId;
+    }
+
+    /**
+	 * 设置：预占时间
+	 */
+    public Date getYuezhanTime() {
+        return yuezhanTime;
+    }
+
+    /**
+	 * 获取：预占时间
+	 */
+    public void setYuezhanTime(Date yuezhanTime) {
+        this.yuezhanTime = yuezhanTime;
+    }
+
+    /**
 	 * 设置：创建时间
 	 */
     public Date getCreateTime() {
@@ -197,6 +243,8 @@ public class XuanpaiEntity<T> implements Serializable {
             ", xuanpaiName=" + xuanpaiName +
             ", xuanpaiTypes=" + xuanpaiTypes +
             ", zhuangtaiTypes=" + zhuangtaiTypes +
+            ", yonghuId=" + yonghuId +
+            ", yuezhanTime=" + yuezhanTime +
             ", insertTime=" + insertTime +
             ", createTime=" + createTime +
         "}";

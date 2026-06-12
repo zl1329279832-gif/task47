@@ -31,6 +31,8 @@ import com.service.XuanpaiService;
 import com.entity.XuanpaiEntity;
 import com.service.YonghuService;
 import com.entity.YonghuEntity;
+import com.service.BaoxianService;
+import com.entity.BaoxianEntity;
 
 import com.utils.PageUtils;
 import com.utils.R;
@@ -64,6 +66,8 @@ public class ShangpaiController {
     private XuanpaiService xuanpaiService;
     @Autowired
     private YonghuService yonghuService;
+    @Autowired
+    private BaoxianService baoxianService;
 
 
     /**
@@ -72,7 +76,7 @@ public class ShangpaiController {
     @RequestMapping("/page")
     public R page(@RequestParam Map<String, Object> params, HttpServletRequest request){
         logger.debug("page方法:,,Controller:{},,params:{}",this.getClass().getName(),JSONObject.toJSONString(params));
-     
+
         String role = String.valueOf(request.getSession().getAttribute("role"));
         if(StringUtil.isNotEmpty(role) && "用户".equals(role)){
             params.put("yonghuId",request.getSession().getAttribute("userId"));
@@ -113,6 +117,15 @@ public class ShangpaiController {
                 BeanUtils.copyProperties( yonghu , view ,new String[]{ "id", "createDate"});//把级联的数据添加到view中,并排除id和创建时间字段
                 view.setYonghuId(yonghu.getId());
             }
+            //级联表
+            if(shangpai.getBaoxianId() != null){
+                BaoxianEntity baoxian = baoxianService.selectById(shangpai.getBaoxianId());
+                if(baoxian != null){
+                    view.setBaoxianName(baoxian.getBaoxianName());
+                    view.setBaoxianTypes(baoxian.getBaoxianTypes());
+                    view.setBaoxianMoney(baoxian.getBaoxianMoney());
+                }
+            }
             //修改对应字典表字段
             dictionaryService.dictionaryConvert(view);
             return R.ok().put("data", view);
@@ -138,10 +151,6 @@ public class ShangpaiController {
         if(shangpaiEntity==null){
             shangpai.setInsertTime(new Date());
             shangpai.setCreateTime(new Date());
-        //  String role = String.valueOf(request.getSession().getAttribute("role"));
-        //  if("".equals(role)){
-        //      shangpai.set
-        //  }
             shangpaiService.insert(shangpai);
             return R.ok();
         }else {
@@ -166,10 +175,6 @@ public class ShangpaiController {
         logger.info("sql语句:"+queryWrapper.getSqlSegment());
         ShangpaiEntity shangpaiEntity = shangpaiService.selectOne(queryWrapper);
         if(shangpaiEntity==null){
-            //  String role = String.valueOf(request.getSession().getAttribute("role"));
-            //  if("".equals(role)){
-            //      shangpai.set
-            //  }
             shangpaiService.updateById(shangpai);//根据id更新
             return R.ok();
         }else {
@@ -180,62 +185,101 @@ public class ShangpaiController {
 
 
     /**
-    * 选牌
+    * 选牌预占（限时30分钟）
     */
     @RequestMapping("/xuanzhe")
     public R xuanzhe(Integer ids, HttpServletRequest request){
-        XuanpaiEntity xuanpai = xuanpaiService.selectById(ids);
-        if(xuanpai == null){
-            return R.error();
+        logger.debug("xuanzhe方法:,,Controller:{},,xuanpaiId:{}",this.getClass().getName(), ids);
+        Integer yonghuId = (Integer) request.getSession().getAttribute("userId");
+        if(yonghuId == null){
+            return R.error(401, "请先登录");
         }
-        xuanpai.setZhuangtaiTypes(2);
-        boolean b = xuanpaiService.updateById(xuanpai);
-        if(b){
-            ShangpaiEntity shangpai = new ShangpaiEntity();
-            shangpai.setShangpaiTypes(ids);
-            shangpai.setCreateTime(new Date());
-            shangpai.setInsertTime(new Date());
-            shangpai.setXuanpaiId(ids);
-            shangpai.setShangpaiTypes(1);
-            shangpai.setYonghuId((Integer) request.getSession().getAttribute("userId"));
-            Wrapper<ShangpaiEntity> queryWrapper = new EntityWrapper<ShangpaiEntity>()
-                    .eq("yonghu_id", shangpai.getYonghuId())
-                    .eq("xuanpai_id", shangpai.getXuanpaiId())
-                    ;
-            logger.info("sql语句:"+queryWrapper.getSqlSegment());
-            ShangpaiEntity shangpaiEntity = shangpaiService.selectOne(queryWrapper);
-            if(shangpaiEntity!=null){
-                return R.error("你已经学过这个车牌了");
-            }
-            boolean insert = shangpaiService.insert(shangpai);
-            if(insert){
-                return R.ok();
+        return shangpaiService.reservePlate(ids, yonghuId);
+    }
+
+
+    /**
+     * 提交上牌申请（选择预占号牌和保险）
+     */
+    @RequestMapping("/tijiao")
+    public R tijiao(Integer xuanpaiId, Integer baoxianId, HttpServletRequest request){
+        logger.debug("tijiao方法:,,Controller:{},,xuanpaiId:{},baoxianId:{}",this.getClass().getName(), xuanpaiId, baoxianId);
+        Integer yonghuId = (Integer) request.getSession().getAttribute("userId");
+        if(yonghuId == null){
+            return R.error(401, "请先登录");
+        }
+        return shangpaiService.submitApplication(xuanpaiId, baoxianId, yonghuId);
+    }
+
+
+    /**
+     * 查看申请进度（用户只能查看自己的申请）
+     */
+    @RequestMapping("/jindu/{id}")
+    public R jindu(@PathVariable("id") Long id, HttpServletRequest request){
+        logger.debug("jindu方法:,,Controller:{},,id:{}",this.getClass().getName(),id);
+        Integer yonghuId = (Integer) request.getSession().getAttribute("userId");
+        if(yonghuId == null){
+            return R.error(401, "请先登录");
+        }
+
+        ShangpaiEntity shangpai = shangpaiService.selectById(id);
+        if(shangpai == null){
+            return R.error(511,"申请记录不存在");
+        }
+
+        // 防止用户查看他人申请
+        if(!yonghuId.equals(shangpai.getYonghuId())){
+            return R.error(511,"无权查看他人的上牌申请");
+        }
+
+        // 构建视图
+        ShangpaiView view = new ShangpaiView();
+        BeanUtils.copyProperties(shangpai, view);
+
+        // 级联号牌信息
+        XuanpaiEntity xuanpai = xuanpaiService.selectById(shangpai.getXuanpaiId());
+        if(xuanpai != null){
+            BeanUtils.copyProperties(xuanpai, view, new String[]{"id", "createDate"});
+            view.setXuanpaiId(xuanpai.getId());
+        }
+
+        // 级联用户信息
+        YonghuEntity yonghu = yonghuService.selectById(shangpai.getYonghuId());
+        if(yonghu != null){
+            BeanUtils.copyProperties(yonghu, view, new String[]{"id", "createDate"});
+            view.setYonghuId(yonghu.getId());
+        }
+
+        // 级联保险信息
+        if(shangpai.getBaoxianId() != null){
+            BaoxianEntity baoxian = baoxianService.selectById(shangpai.getBaoxianId());
+            if(baoxian != null){
+                view.setBaoxianName(baoxian.getBaoxianName());
+                view.setBaoxianTypes(baoxian.getBaoxianTypes());
+                view.setBaoxianMoney(baoxian.getBaoxianMoney());
             }
         }
-        return R.error();
+
+        // 字典表转换
+        dictionaryService.dictionaryConvert(view);
+
+        return R.ok().put("data", view);
     }
 
 
 
     /**
-     * 审核
+     * 审核（仅管理员可操作，含并发保护）
      */
     @RequestMapping("/shenhe")
-    public R shenhe(Integer ids,Integer jieguo){
-        ShangpaiEntity shangpai = shangpaiService.selectById(ids);
-        if(shangpai == null){
-            return R.error();
+    public R shenhe(Integer ids, Integer jieguo, HttpServletRequest request){
+        logger.debug("shenhe方法:,,Controller:{},,shangpaiId:{},jieguo:{}",this.getClass().getName(), ids, jieguo);
+        String role = String.valueOf(request.getSession().getAttribute("role"));
+        if(!"管理员".equals(role)){
+            return R.error(511,"仅管理员可审核上牌申请");
         }
-        XuanpaiEntity xuanpai = xuanpaiService.selectById(shangpai.getXuanpaiId());
-        if(jieguo == 2){
-            xuanpai.setZhuangtaiTypes(3);
-        }else{
-            xuanpai.setZhuangtaiTypes(1);
-        }
-        shangpai.setShangpaiTypes(jieguo);
-        xuanpaiService.updateById(xuanpai);
-        shangpaiService.updateById(shangpai);
-        return R.ok();
+        return shangpaiService.reviewApplication(ids, jieguo);
     }
 
 
@@ -314,6 +358,15 @@ public class ShangpaiController {
                     BeanUtils.copyProperties( yonghu , view ,new String[]{ "id", "createDate"});//把级联的数据添加到view中,并排除id和创建时间字段
                     view.setYonghuId(yonghu.getId());
                 }
+                //级联表
+                if(shangpai.getBaoxianId() != null){
+                    BaoxianEntity baoxian = baoxianService.selectById(shangpai.getBaoxianId());
+                    if(baoxian != null){
+                        view.setBaoxianName(baoxian.getBaoxianName());
+                        view.setBaoxianTypes(baoxian.getBaoxianTypes());
+                        view.setBaoxianMoney(baoxian.getBaoxianMoney());
+                    }
+                }
                 //修改对应字典表字段
                 dictionaryService.dictionaryConvert(view);
                 return R.ok().put("data", view);
@@ -339,10 +392,6 @@ public class ShangpaiController {
         if(shangpaiEntity==null){
             shangpai.setInsertTime(new Date());
             shangpai.setCreateTime(new Date());
-        //  String role = String.valueOf(request.getSession().getAttribute("role"));
-        //  if("".equals(role)){
-        //      shangpai.set
-        //  }
         shangpaiService.insert(shangpai);
             return R.ok();
         }else {
@@ -351,8 +400,27 @@ public class ShangpaiController {
     }
 
 
+    /**
+    * 可选号牌列表（用户查看可选的号牌，支持按车牌类型筛选）
+    */
+    @RequestMapping("/availablePlates")
+    public R availablePlates(@RequestParam Map<String, Object> params, HttpServletRequest request){
+        logger.debug("availablePlates方法:,,Controller:{},,params:{}",this.getClass().getName(),JSONObject.toJSONString(params));
 
+        // 只查询可选状态的号牌（状态1=可选）
+        params.put("zhuangtaiTypes", 1);
+        if(StringUtil.isEmpty(String.valueOf(params.get("orderBy")))){
+            params.put("orderBy","id");
+        }
+        PageUtils page = xuanpaiService.queryPage(params);
+
+        // 字典表数据转换
+        List list = page.getList();
+        for(Object c : list){
+            dictionaryService.dictionaryConvert(c);
+        }
+        return R.ok().put("data", page);
+    }
 
 
 }
-
