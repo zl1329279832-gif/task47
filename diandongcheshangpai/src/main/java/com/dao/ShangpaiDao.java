@@ -12,11 +12,13 @@ import com.entity.view.ShangpaiView;
 /**
  * 上牌信息 Dao 接口
  *
- * @author 
+ * @author
  * @since 2021-04-27
  */
 public interface ShangpaiDao extends BaseMapper<ShangpaiEntity> {
 
    List<ShangpaiView> selectListView(Pagination page,@Param("params")Map<String,Object> params);
+
+   ShangpaiEntity selectForUpdate(@Param("id") Integer id);
 
 }

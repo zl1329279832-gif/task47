@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.controller.ShangpaiControllerIntegrationTest
+-------------------------------------------------------------------------------
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.754 s -- in com.controller.ShangpaiControllerIntegrationTest

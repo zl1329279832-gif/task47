@@ -80,6 +80,14 @@ public class ShangpaiEntity<T> implements Serializable {
 
 
     /**
+     * 保险ID
+     */
+    @TableField(value = "baoxian_id")
+
+    private Integer baoxianId;
+
+
+    /**
      * 申请时间
      */
     @JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
@@ -160,6 +168,20 @@ public class ShangpaiEntity<T> implements Serializable {
         this.shangpaiTypes = shangpaiTypes;
     }
     /**
+	 * 设置：保险ID
+	 */
+    public Integer getBaoxianId() {
+        return baoxianId;
+    }
+
+    /**
+	 * 获取：保险ID
+	 */
+
+    public void setBaoxianId(Integer baoxianId) {
+        this.baoxianId = baoxianId;
+    }
+    /**
 	 * 设置：申请时间
 	 */
     public Date getInsertTime() {
@@ -197,6 +219,7 @@ public class ShangpaiEntity<T> implements Serializable {
             ", yonghuId=" + yonghuId +
             ", xuanpaiId=" + xuanpaiId +
             ", shangpaiTypes=" + shangpaiTypes +
+            ", baoxianId=" + baoxianId +
             ", insertTime=" + insertTime +
             ", createTime=" + createTime +
         "}";

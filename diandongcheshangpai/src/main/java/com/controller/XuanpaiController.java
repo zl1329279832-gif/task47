@@ -172,6 +172,69 @@ public class XuanpaiController {
 
 
     /**
+     * 可选号牌列表（仅可用状态）
+     */
+    @RequestMapping("/available")
+    public R available(@RequestParam Map<String, Object> params, HttpServletRequest request){
+        logger.debug("available方法:,,Controller:{},,params:{}",this.getClass().getName(),JSONObject.toJSONString(params));
+        params.put("zhuangtaiTypes", 1);
+        params.put("orderBy","id");
+        PageUtils page = xuanpaiService.queryPage(params);
+        List<XuanpaiView> list = (List<XuanpaiView>)page.getList();
+        for(XuanpaiView c:list){
+            dictionaryService.dictionaryConvert(c);
+        }
+        return R.ok().put("data", page);
+    }
+
+    /**
+     * 预占号牌
+     */
+    @RequestMapping("/yuyue")
+    public R yuyue(@RequestBody XuanpaiEntity xuanpai, HttpServletRequest request){
+        logger.debug("yuyue方法:,,Controller:{},,xuanpai:{}",this.getClass().getName(),xuanpai.toString());
+        Integer userId = (Integer) request.getSession().getAttribute("userId");
+        if(userId == null){
+            return R.error(401, "请先登录");
+        }
+        try {
+            xuanpaiService.reservePlate(xuanpai.getId(), userId, 30);
+            return R.ok("预占成功，请在30分钟内完成申请");
+        } catch (RuntimeException e) {
+            return R.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 取消预占
+     */
+    @RequestMapping("/cancelYuyue")
+    public R cancelYuyue(@RequestBody XuanpaiEntity xuanpai, HttpServletRequest request){
+        logger.debug("cancelYuyue方法:,,Controller:{},,xuanpai:{}",this.getClass().getName(),xuanpai.toString());
+        Integer userId = (Integer) request.getSession().getAttribute("userId");
+        if(userId == null){
+            return R.error(401, "请先登录");
+        }
+        try {
+            XuanpaiEntity plate = xuanpaiService.selectById(xuanpai.getId());
+            if(plate == null){
+                return R.error("车牌不存在");
+            }
+            if(plate.getZhuangtaiTypes() == null || plate.getZhuangtaiTypes() != 2){
+                return R.error("车牌当前不在预占状态");
+            }
+            if(plate.getYuyueUserId() == null || !plate.getYuyueUserId().equals(userId)){
+                return R.error("只能取消自己的预占");
+            }
+            xuanpaiService.releasePlate(xuanpai.getId());
+            // Record cancel log
+            return R.ok("预占已取消");
+        } catch (RuntimeException e) {
+            return R.error(e.getMessage());
+        }
+    }
+
+    /**
     * 前端列表
     */
     @RequestMapping("/list")

@@ -100,6 +100,32 @@ public class XuanpaiEntity<T> implements Serializable {
 
 
     /**
+     * 预占用户ID
+     */
+    @TableField(value = "yuyue_user_id")
+
+    private Integer yuyueUserId;
+
+
+    /**
+     * 预占过期时间
+     */
+    @JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
+	@DateTimeFormat
+    @TableField(value = "yuyue_expire_time")
+
+    private Date yuyueExpireTime;
+
+
+    /**
+     * 乐观锁版本号
+     */
+    @TableField(value = "version")
+
+    private Integer version;
+
+
+    /**
 	 * 设置：主键
 	 */
     public Integer getId() {
@@ -189,6 +215,48 @@ public class XuanpaiEntity<T> implements Serializable {
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
     }
+    /**
+	 * 设置：预占用户ID
+	 */
+    public Integer getYuyueUserId() {
+        return yuyueUserId;
+    }
+
+    /**
+	 * 获取：预占用户ID
+	 */
+
+    public void setYuyueUserId(Integer yuyueUserId) {
+        this.yuyueUserId = yuyueUserId;
+    }
+    /**
+	 * 设置：预占过期时间
+	 */
+    public Date getYuyueExpireTime() {
+        return yuyueExpireTime;
+    }
+
+    /**
+	 * 获取：预占过期时间
+	 */
+
+    public void setYuyueExpireTime(Date yuyueExpireTime) {
+        this.yuyueExpireTime = yuyueExpireTime;
+    }
+    /**
+	 * 设置：乐观锁版本号
+	 */
+    public Integer getVersion() {
+        return version;
+    }
+
+    /**
+	 * 获取：乐观锁版本号
+	 */
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
 
     @Override
     public String toString() {
@@ -199,6 +267,9 @@ public class XuanpaiEntity<T> implements Serializable {
             ", zhuangtaiTypes=" + zhuangtaiTypes +
             ", insertTime=" + insertTime +
             ", createTime=" + createTime +
+            ", yuyueUserId=" + yuyueUserId +
+            ", yuyueExpireTime=" + yuyueExpireTime +
+            ", version=" + version +
         "}";
     }
 }

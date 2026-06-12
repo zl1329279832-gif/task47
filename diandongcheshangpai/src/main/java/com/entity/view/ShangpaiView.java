@@ -91,6 +91,13 @@ public class ShangpaiView extends ShangpaiEntity implements Serializable {
 			*/
 			private String yonghuPhoto;
 
+			//级联表 baoxian
+				private String baoxianName;
+				private Integer baoxianTypes;
+				private String baoxianValue;
+				private Double baoxianMoney;
+				private String baoxianContent;
+
 	public ShangpaiView() {
 
 	}
@@ -316,7 +323,37 @@ public class ShangpaiView extends ShangpaiEntity implements Serializable {
 						this.yonghuPhoto = yonghuPhoto;
 					}
 
-
+					//级联表的get和set baoxian
+						public String getBaoxianName() {
+							return baoxianName;
+						}
+						public void setBaoxianName(String baoxianName) {
+							this.baoxianName = baoxianName;
+						}
+						public Integer getBaoxianTypes() {
+							return baoxianTypes;
+						}
+						public void setBaoxianTypes(Integer baoxianTypes) {
+							this.baoxianTypes = baoxianTypes;
+						}
+						public String getBaoxianValue() {
+							return baoxianValue;
+						}
+						public void setBaoxianValue(String baoxianValue) {
+							this.baoxianValue = baoxianValue;
+						}
+						public Double getBaoxianMoney() {
+							return baoxianMoney;
+						}
+						public void setBaoxianMoney(Double baoxianMoney) {
+							this.baoxianMoney = baoxianMoney;
+						}
+						public String getBaoxianContent() {
+							return baoxianContent;
+						}
+						public void setBaoxianContent(String baoxianContent) {
+							this.baoxianContent = baoxianContent;
+						}
 
 
 }

@@ -31,6 +31,7 @@ import com.service.XuanpaiService;
 import com.entity.XuanpaiEntity;
 import com.service.YonghuService;
 import com.entity.YonghuEntity;
+import com.service.BaoxianService;
 
 import com.utils.PageUtils;
 import com.utils.R;
@@ -64,6 +65,8 @@ public class ShangpaiController {
     private XuanpaiService xuanpaiService;
     @Autowired
     private YonghuService yonghuService;
+    @Autowired
+    private BaoxianService baoxianService;
 
 
     /**
@@ -222,22 +225,88 @@ public class ShangpaiController {
      */
     @RequestMapping("/shenhe")
     public R shenhe(Integer ids,Integer jieguo){
-        ShangpaiEntity shangpai = shangpaiService.selectById(ids);
-        if(shangpai == null){
-            return R.error();
+        try {
+            shangpaiService.auditApplication(ids, jieguo);
+            return R.ok();
+        } catch (RuntimeException e) {
+            return R.error(e.getMessage());
         }
-        XuanpaiEntity xuanpai = xuanpaiService.selectById(shangpai.getXuanpaiId());
-        if(jieguo == 2){
-            xuanpai.setZhuangtaiTypes(3);
-        }else{
-            xuanpai.setZhuangtaiTypes(1);
-        }
-        shangpai.setShangpaiTypes(jieguo);
-        xuanpaiService.updateById(xuanpai);
-        shangpaiService.updateById(shangpai);
-        return R.ok();
     }
 
+
+    /**
+     * 提交上牌申请
+     */
+    @RequestMapping("/apply")
+    public R apply(@RequestBody ShangpaiEntity shangpai, HttpServletRequest request){
+        logger.debug("apply方法:,,Controller:{},,shangpai:{}",this.getClass().getName(),shangpai.toString());
+        Integer userId = (Integer) request.getSession().getAttribute("userId");
+        if(userId == null){
+            return R.error(401, "请先登录");
+        }
+        try {
+            ShangpaiEntity result = shangpaiService.submitApplication(shangpai.getXuanpaiId(), shangpai.getBaoxianId(), userId);
+            return R.ok().put("data", result);
+        } catch (RuntimeException e) {
+            return R.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 查看申请进度列表
+     */
+    @RequestMapping("/progress")
+    public R progress(@RequestParam Map<String, Object> params, HttpServletRequest request){
+        logger.debug("progress方法:,,Controller:{},,params:{}",this.getClass().getName(),JSONObject.toJSONString(params));
+        Integer userId = (Integer) request.getSession().getAttribute("userId");
+        if(userId == null){
+            return R.error(401, "请先登录");
+        }
+        params.put("yonghuId", userId);
+        params.put("orderBy","id");
+        PageUtils page = shangpaiService.queryPage(params);
+        List<ShangpaiView> list = (List<ShangpaiView>)page.getList();
+        for(ShangpaiView c:list){
+            dictionaryService.dictionaryConvert(c);
+        }
+        return R.ok().put("data", page);
+    }
+
+    /**
+     * 查看申请进度详情
+     */
+    @RequestMapping("/progress/{id}")
+    public R progressDetail(@PathVariable("id") Long id, HttpServletRequest request){
+        logger.debug("progressDetail方法:,,Controller:{},,id:{}",this.getClass().getName(),id);
+        Integer userId = (Integer) request.getSession().getAttribute("userId");
+        String role = String.valueOf(request.getSession().getAttribute("role"));
+        if(userId == null){
+            return R.error(401, "请先登录");
+        }
+        ShangpaiEntity shangpai = shangpaiService.selectById(id);
+        if(shangpai == null){
+            return R.error(511,"查不到数据");
+        }
+        // 普通用户只能查看自己的申请
+        if(!"管理员".equals(role) && !shangpai.getYonghuId().equals(userId)){
+            return R.error(511,"无权查看他人申请");
+        }
+        //entity转view
+        ShangpaiView view = new ShangpaiView();
+        BeanUtils.copyProperties(shangpai, view);
+        XuanpaiEntity xuanpai = xuanpaiService.selectById(shangpai.getXuanpaiId());
+        if(xuanpai != null){
+            BeanUtils.copyProperties(xuanpai, view, new String[]{"id", "createDate"});
+            view.setXuanpaiId(xuanpai.getId());
+        }
+        YonghuEntity yonghu = yonghuService.selectById(shangpai.getYonghuId());
+        if(yonghu != null){
+            BeanUtils.copyProperties(yonghu, view, new String[]{"id", "createDate"});
+            view.setYonghuId(yonghu.getId());
+        }
+        dictionaryService.dictionaryConvert(view);
+        return R.ok().put("data", view);
+    }
 
     /**
     * 删除

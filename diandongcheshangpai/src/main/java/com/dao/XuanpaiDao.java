@@ -2,6 +2,7 @@ package com.dao;
 
 import com.entity.XuanpaiEntity;
 import com.baomidou.mybatisplus.mapper.BaseMapper;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import com.baomidou.mybatisplus.plugins.pagination.Pagination;
@@ -12,11 +13,20 @@ import com.entity.view.XuanpaiView;
 /**
  * 选牌信息 Dao 接口
  *
- * @author 
+ * @author
  * @since 2021-04-27
  */
 public interface XuanpaiDao extends BaseMapper<XuanpaiEntity> {
 
    List<XuanpaiView> selectListView(Pagination page,@Param("params")Map<String,Object> params);
+
+   int updateWithVersion(@Param("id") Integer id, @Param("oldVersion") Integer oldVersion,
+                         @Param("zhuangtaiTypes") Integer zhuangtaiTypes,
+                         @Param("yuyueUserId") Integer yuyueUserId,
+                         @Param("yuyueExpireTime") Date yuyueExpireTime);
+
+   int batchReleaseExpired();
+
+   List<XuanpaiEntity> selectExpiredReservations();
 
 }
